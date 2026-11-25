@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Homework: Back to basics</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400..700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F2F8FC; --paper: #FFFFFF; --ink: #12304A; --muted: #41586D; --blue: #1B6CA8; --on-blue: #FFFFFF;
+  --sun: #FFB703; --line: #C9DCE9; --ok: #17734A; --bad: #A32A22; --focus: #12304A; --soft: #E9F3FA;
+  --m-grass: #BFE3B4; --m-pitch: #8FCB7A; --m-line: #FFFFFF; --m-road: #E7DFC9; --m-wall: #8C98A8;
+  --m-room: #F7F2E6; --m-corr: #E3E9F0; --m-class: #E6EEF7; --m-ink: #1F3550;
+  color-scheme: light; box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1B2A; --paper: #172A3F; --ink: #EAF3FA; --muted: #B4C7D8; --blue: #7DB9EA; --on-blue: #0B1826;
+    --sun: #FFC83D; --line: #2E4660; --ok: #7FDCA8; --bad: #FFA39B; --focus: #EAF3FA; --soft: #1B3149;
+    --m-grass: #1F3A2A; --m-pitch: #2E5A3A; --m-line: #CFE6D2; --m-road: #3A4252; --m-wall: #5A6B82;
+    --m-room: #223149; --m-corr: #2A3B55; --m-class: #2B3E5C; --m-ink: #E8F0F8; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1B2A; --paper: #172A3F; --ink: #EAF3FA; --muted: #B4C7D8; --blue: #7DB9EA; --on-blue: #0B1826;
+  --sun: #FFC83D; --line: #2E4660; --ok: #7FDCA8; --bad: #FFA39B; --focus: #EAF3FA; --soft: #1B3149;
+  --m-grass: #1F3A2A; --m-pitch: #2E5A3A; --m-line: #CFE6D2; --m-road: #3A4252; --m-wall: #5A6B82;
+  --m-room: #223149; --m-corr: #2A3B55; --m-class: #2B3E5C; --m-ink: #E8F0F8; color-scheme: dark;
+}
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Nunito', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; font-size: 20px; line-height: 1.5; }
+.wrap { max-width: 880px; margin: 0 auto; padding: 32px 20px 64px; counter-reset: s; }
+h1, h2, h3 { font-family: 'Fredoka', 'Nunito', system-ui, Arial, sans-serif; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(32px, 8vw, 52px); font-weight: 600; }
+h2 { font-size: 30px; font-weight: 600; }
+h3 { font-size: 25px; font-weight: 600; }
+.lead { margin: 12px 0 0; color: var(--muted); max-width: 34em; }
+.task { margin: 8px 0 8px; color: var(--muted); max-width: 34em; }
+.tr { margin: 2px 0 8px; color: var(--muted); font-size: 18px; font-style: italic; max-width: 36em; }
+.prompt + .tr { margin-top: 4px; }
+.progress { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; margin-top: 22px; padding: 10px 0; background: var(--bg); border-bottom: 2px solid var(--line); font-weight: 700; color: var(--muted); }
+.part { margin-top: 44px; }
+.sub { margin-top: 36px; }
+.banner { margin-top: 48px; padding: 18px 20px; border-radius: 16px; background: var(--soft); border-left: 8px solid var(--blue); }
+.banner p { margin: 6px 0 0; color: var(--muted); }
+
+.items { list-style: none; margin: 0; padding: 0; }
+.items > li { counter-increment: s; padding: 20px 0; border-bottom: 2px solid var(--line); }
+.items > li::before { content: attr(data-n) "."; display: block; margin-bottom: 6px; font-weight: 700; color: var(--muted); }
+.prompt { margin: 0; font: 700 27px/1.3 'Nunito', system-ui, Arial, sans-serif; }
+.vis { display: flex; align-items: center; gap: 12px; margin: 10px 0 0; font-size: 46px; line-height: 1; }
+.vis .sign { display: block; width: 74px; height: 74px; }
+.loc { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border: 3px dashed var(--blue); border-radius: 50%; background: var(--paper); font-size: 32px; }
+.opts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.o { min-height: 52px; padding: 6px 18px; border: 2px solid var(--blue); border-radius: 12px; background: transparent; color: var(--blue); font: 700 22px 'Nunito', system-ui, Arial, sans-serif; text-align: left; cursor: pointer; }
+.o[aria-pressed="true"] { background: var(--blue); color: var(--on-blue); }
+.of { width: 118px; padding: 6px; border: 3px solid var(--line); border-radius: 10px; background: var(--paper); cursor: pointer; }
+.of svg { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 4px; background: #FFFFFF; }
+.of[aria-pressed="true"] { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue); }
+
+.line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 58px; padding: 4px 0; border-bottom: 3px solid var(--ink); margin-top: 8px; }
+.line .end { font: 700 30px 'Nunito', system-ui, Arial, sans-serif; }
+.pool { display: flex; flex-wrap: wrap; gap: 8px; min-height: 50px; margin-top: 12px; }
+.tile { min-height: 48px; padding: 0 16px; border: 2px solid var(--blue); border-radius: 12px; background: var(--paper); color: var(--blue); cursor: pointer; font: 700 23px 'Nunito', system-ui, Arial, sans-serif; }
+.line .tile { background: var(--blue); color: var(--on-blue); }
+.items button:disabled, .items textarea:disabled { cursor: default; }
+textarea.write { width: 100%; min-height: 130px; margin-top: 12px; padding: 12px 14px; border: 2px solid var(--line); border-radius: 12px; background: var(--paper); color: var(--ink); font: 600 22px/1.4 'Nunito', system-ui, Arial, sans-serif; resize: vertical; }
+
+.mapwrap { margin: 14px 0 4px; max-width: 520px; }
+.mapbox { position: relative; width: 100%; aspect-ratio: 1 / 1; container-type: inline-size; }
+.mapsvg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border-radius: 12px; }
+.zone2 { position: absolute; display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 1cqw; }
+.kid { font-size: 6.4cqw; line-height: 1; }
+.m-grass { fill: var(--m-grass); } .m-pitch { fill: var(--m-pitch); } .m-road { fill: var(--m-road); } .m-wall { fill: var(--m-wall); }
+.m-room { fill: var(--m-room); stroke: var(--m-wall); stroke-width: 0.3; } .m-class { fill: var(--m-class); stroke: var(--m-wall); stroke-width: 0.3; }
+.m-corr { fill: var(--m-corr); stroke: var(--m-wall); stroke-width: 0.3; } .m-door { fill: var(--m-corr); } .m-desk { fill: var(--m-wall); opacity: 0.55; }
+.m-dash { stroke: var(--m-wall); stroke-width: 0.3; stroke-dasharray: 2 2; }
+.m-line rect, .m-line line, .m-line circle { stroke: var(--m-line); stroke-width: 0.5; fill: none; }
+.m-label { fill: var(--m-ink); font-weight: 800; font-family: 'Nunito', system-ui, Arial, sans-serif; }
+.m-dim { fill: var(--m-ink); opacity: 0.6; font-family: 'Nunito', system-ui, Arial, sans-serif; }
+
+.finish { margin-top: 48px; }
+.warn { min-height: 1.5em; margin: 0 0 14px; color: var(--bad); font-weight: 700; }
+.btn { min-height: 52px; padding: 0 26px; border: 2px solid var(--ink); border-radius: 14px; background: transparent; color: var(--ink); cursor: pointer; font: 600 21px 'Fredoka', 'Nunito', system-ui, Arial, sans-serif; }
+.btn.primary { border-color: var(--blue); background: var(--blue); color: var(--on-blue); min-height: 62px; padding: 0 32px; font-size: 26px; }
+
+.results { margin-top: 56px; padding-top: 28px; border-top: 4px solid var(--ink); }
+.results:focus { outline: none; }
+.score { margin: 12px 0 0; font: 600 30px/1.3 'Fredoka', 'Nunito', system-ui, Arial, sans-serif; }
+.praise { margin: 8px 0 0; color: var(--muted); }
+.rpart { margin-top: 34px; }
+.ritem { padding: 14px 0; border-bottom: 2px solid var(--line); }
+.rq { margin: 0 0 4px; font: 700 23px/1.3 'Nunito', system-ui, Arial, sans-serif; }
+.verdict { margin: 0 0 6px; font-weight: 700; }
+.verdict.ok { color: var(--ok); } .verdict.bad { color: var(--bad); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 4px 0; }
+.lab { color: var(--muted); font-weight: 600; }
+.mf { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; }
+.mf svg { display: block; width: 64px; height: auto; border: 1px solid var(--line); border-radius: 3px; background: #FFFFFF; }
+.ractions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.copymsg { min-height: 1.5em; margin: 14px 0 0; font-weight: 700; color: var(--ok); }
+.copybox { width: 100%; min-height: 160px; margin-top: 10px; padding: 12px; border: 2px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--ink); font: 400 18px/1.4 'Nunito', system-ui, Arial, sans-serif; }
+button:focus-visible, textarea:focus-visible, a:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+[hidden] { display: none !important; }
+.namebox { margin-top: 26px; padding: 16px 18px; border: 2px solid var(--line); border-radius: 14px; background: var(--paper); }
+.namebox label { display: block; font-weight: 700; }
+.namebox input { width: 100%; margin-top: 8px; min-height: 52px; padding: 8px 14px; border: 2px solid var(--blue); border-radius: 12px; background: var(--bg); color: var(--ink); font: 700 22px 'Nunito', system-ui, Arial, sans-serif; }
+.namebox.missing { border-color: var(--bad); }
+.readbox { margin-top: 14px; padding: 16px 18px; border: 2px solid var(--line); border-radius: 14px; background: var(--paper); font-size: 22px; line-height: 1.7; max-width: 36em; }
+.gap { font-weight: 800; color: var(--blue); white-space: nowrap; }
+.cast { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 14px; }
+.kidcard { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 2px solid var(--line); border-radius: 12px; background: var(--paper); }
+.kidcard .face { font-size: 34px; line-height: 1; }
+.kidcard b { display: block; font-size: 20px; }
+.kidcard .meta { display: flex; align-items: center; gap: 6px; font-size: 24px; line-height: 1; }
+.kidcard .meta svg { width: 36px; height: auto; border: 1px solid var(--line); border-radius: 3px; background: #FFFFFF; }
+.clues { margin: 10px 0 0; padding-left: 0; list-style: none; font: 700 23px/1.4 'Nunito', system-ui, Arial, sans-serif; }
+.clues li::before { content: "🔎 "; }
+.sendmsg { min-height: 1.5em; margin: 10px 0 0; font-weight: 700; }
+.sendmsg.ok { color: var(--ok); }
+.sendmsg.bad { color: var(--bad); }
+input:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+.readbox.inline { line-height: 2.3; max-width: none; }
+.igap { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 2px 4px; padding: 2px 6px; border: 2px dashed var(--blue); border-radius: 12px; vertical-align: middle; line-height: 1.2; }
+.igap.done { border-style: solid; }
+.ignum { font-size: 15px; font-weight: 800; color: var(--muted); padding: 0 2px; }
+.oi { min-height: 44px; min-width: 44px; padding: 2px 12px; border: 2px solid var(--blue); border-radius: 10px; background: transparent; color: var(--blue); font: 700 21px 'Nunito', system-ui, Arial, sans-serif; cursor: pointer; }
+.oi[aria-pressed="true"] { background: var(--blue); color: var(--on-blue); }
+.opts.cast { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.o.kidcard { min-height: 64px; padding: 10px 12px; color: var(--ink); border-color: var(--line); background: var(--paper); }
+.o.kidcard[aria-pressed="true"] { border-color: var(--blue); background: var(--soft); box-shadow: 0 0 0 3px var(--blue); color: var(--ink); }
+
+.bonus { margin-top: 56px; padding: 18px 20px 8px; border: 3px dashed var(--sun); border-radius: 18px; }
+.bonus h2::first-letter { color: var(--sun); }
+.bh { margin: 0 0 6px; font-weight: 700; color: var(--muted); font-size: 19px; }
+.readbox.hunt { display: flex; flex-wrap: wrap; gap: 0 1px; line-height: 1.3; max-width: none; }
+.hw { min-height: 42px; padding: 0 3px; border: 2px solid transparent; border-radius: 8px; background: transparent; color: var(--ink); font: 700 22px 'Nunito', system-ui, Arial, sans-serif; cursor: pointer; }
+.hw[aria-pressed="true"] { border-color: var(--bad); color: var(--bad); text-decoration: line-through; }
+.rpart.bonus { border-style: dashed; }
+.results { scroll-margin-top: 70px; }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <h1>Homework: Back to basics</h1>
+    <p class="lead">Write your name. Do every part. Then press “Send my homework” at the end.</p>
+    <p class="tr" lang="tr">Adını yaz. Bütün bölümleri yap. Sonra en alttaki “Ödevimi gönder” düğmesine bas.</p>
+  </header>
+  <section class="namebox">
+    <label for="sname">Your name and surname / Adın ve soyadın</label>
+    <input id="sname" type="text" autocomplete="name" maxlength="60" placeholder="Ayşe Yılmaz">
+  </section>
+  <div class="progress" id="progress">Answered 0 of 0</div>
+  <div id="parts"></div>
+
+  <section class="finish">
+    <p class="warn" id="warn" role="status" aria-live="polite" lang="tr"></p>
+    <button type="button" class="btn primary" id="see">Send my homework / Ödevimi gönder</button>
+  </section>
+
+  <section class="results" id="results" lang="tr" tabindex="-1" aria-labelledby="res-title" hidden>
+    <h2 id="res-title">Sonuçların</h2>
+    <p class="sendmsg" id="sendmsg" role="status" aria-live="polite"></p>
+    <button type="button" class="btn" id="resend" hidden>Tekrar gönder</button>
+    <p class="score" id="score"></p>
+    <p class="praise" id="praise"></p>
+    <div id="res-parts"></div>
+    <div class="ractions">
+      <button type="button" class="btn" id="restart">Baştan başla</button>
+    </div>
+  </section>
+  <noscript><p>This page needs JavaScript to work.</p></noscript>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  function star(cx, cy, R, r, rot) {
+    var pts = [];
+    for (var i = 0; i < 10; i++) {
+      var a = (rot + i * 36) * Math.PI / 180;
+      var rad = i % 2 === 0 ? R : r;
+      pts.push((cx + rad * Math.cos(a)).toFixed(1) + ',' + (cy + rad * Math.sin(a)).toFixed(1));
+    }
+    return pts.join(' ');
+  }
+  var LEAF = '50,5 58,22 66,18 63,40 80,33 77,45 95,50 80,62 84,68 56,66 56,90 44,90 44,66 16,68 20,62 5,50 23,45 20,33 37,40 34,18 42,22';
+  var DRAW = [
+    '<rect width="120" height="80" fill="#E30A17"/><circle cx="46" cy="40" r="20" fill="#FFFFFF"/><circle cx="52" cy="40" r="16" fill="#E30A17"/><polygon points="' + star(75, 40, 9, 3.6, 0) + '" fill="#FFFFFF"/>',
+    '<rect width="120" height="80" fill="#C60B1E"/><rect y="20" width="120" height="40" fill="#FFC400"/>',
+    '<rect width="120" height="80" fill="#FFFFFF"/><circle cx="60" cy="40" r="24" fill="#BC002D"/>',
+    '<rect width="120" height="80" fill="#D52B1E"/><rect x="30" width="60" height="80" fill="#FFFFFF"/><polygon transform="translate(37,17) scale(0.46)" points="' + LEAF + '" fill="#D52B1E"/>',
+    '<rect width="120" height="80" fill="#1B3A7A"/><path d="M0,0 L120,80 M120,0 L0,80" stroke="#FFFFFF" stroke-width="14"/><path d="M0,0 L120,80 M120,0 L0,80" stroke="#C8102E" stroke-width="5"/><path d="M60,0 V80 M0,40 H120" stroke="#FFFFFF" stroke-width="22"/><path d="M60,0 V80 M0,40 H120" stroke="#C8102E" stroke-width="13"/>',
+    '<rect width="120" height="80" fill="#FFFFFF"/><rect y="27" width="120" height="27" fill="#0039A6"/><rect y="54" width="120" height="26" fill="#D52B1E"/>',
+    '<rect width="120" height="80" fill="#FFFFFF"/><rect width="40" height="80" fill="#009246"/><rect x="80" width="40" height="80" fill="#CE2B37"/>',
+    '<rect width="120" height="80" fill="#FFFFFF"/><rect width="40" height="80" fill="#006847"/><rect x="80" width="40" height="80" fill="#CE1126"/><circle cx="60" cy="40" r="11" fill="#A8844A"/><circle cx="60" cy="40" r="11" fill="none" stroke="#2E7D32" stroke-width="3"/>',
+    '<rect width="120" height="80" fill="#EF3340"/><rect width="120" height="27" fill="#00B5E2"/><rect y="54" width="120" height="26" fill="#509E2F"/><circle cx="56" cy="40" r="8.5" fill="#FFFFFF"/><circle cx="59" cy="40" r="6.8" fill="#EF3340"/><polygon points="' + star(68, 40, 4, 1.7, 0) + '" fill="#FFFFFF"/>',
+    '<rect width="120" height="80" fill="#FFFFFF"/><rect width="40" height="80" fill="#0055A4"/><rect x="80" width="40" height="80" fill="#EF4135"/>'
+  ];
+  /* 0 Türkiye, 1 Spain, 2 Japan, 3 Canada, 4 The UK, 5 Russia, 6 Italy, 7 Mexico, 8 Azerbaijan, 9 France */
+  var EN = ['Türkiye', 'Spain', 'Japan', 'Canada', 'The UK', 'Russia', 'Italy', 'Mexico', 'Azerbaijan', 'France'];
+  var TR = ['Türkiye', 'İspanya', 'Japonya', 'Kanada', 'Birleşik Krallık', 'Rusya', 'İtalya', 'Meksika', 'Azerbaycan', 'Fransa'];
+  function flagSvg(idx) { return '<svg viewBox="0 0 120 80" aria-hidden="true" focusable="false">' + DRAW[idx] + '</svg>'; }
+  function signHtml(e) {
+    return '<svg class="sign" viewBox="0 0 100 100" aria-hidden="true" focusable="false"><circle cx="50" cy="50" r="44" fill="#FFFFFF" stroke="#D7263D" stroke-width="9"/><text x="50" y="67" font-size="46" text-anchor="middle">' + e + '</text><line x1="19" y1="81" x2="81" y2="19" stroke="#D7263D" stroke-width="9"/></svg>';
+  }
+
+  /* ===== SETTINGS ===== */
+  /* Paste your Google Apps Script web app address here (it ends with /exec). */
+  var SHEET_URL = 'https://script.google.com/macros/s/AKfycbz483OOmS8py--mKdWlNpVRNZ5uY2FLxXmn2Eq11aCjlLWFE-KoG_WGlQk4vSm-ZQzi/exec';
+  var HOMEWORK_ID = 'Part 2 · Lesson 1 · Back to basics';
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) { n.className = cls; }
+    if (text !== undefined) { n.textContent = text; }
+    return n;
+  }
+  function T(t, ok) { return { t: t, ok: !!ok }; }
+  function choice(prompt, opts, extra) {
+    var it = { type: 'choice', prompt: prompt, opts: opts, shuffle: false };
+    if (extra) { Object.keys(extra).forEach(function (k) { it[k] = extra[k]; }); }
+    return it;
+  }
+  function tiles(words, end, tr) { return { type: 'tiles', words: words, end: end, tr: tr }; }
+  function AIA(right) { return ['am', 'is', 'are'].map(function (w) { return T(w, w === right); }); }
+
+  var KIDS = [
+    { n: 'Valeria', a: '👧', f: 1, c: '🎨' },
+    { n: 'Aiko', a: '👧', f: 2, c: '🎨' },
+    { n: 'Jack', a: '👦', f: 3, c: '🎵' },
+    { n: 'Marco', a: '👦', f: 6, c: '🎵' },
+    { n: 'Ayşe', a: '👧', f: 0, c: '🎭' },
+    { n: 'Leyla', a: '👧', f: 8, c: '🎭' }
+  ];
+  function castHtml() {
+    return '<div class="cast">' + KIDS.map(function (k) {
+      return '<div class="kidcard"><span class="face" aria-hidden="true">' + k.a + '</span><span><b>' + k.n + '</b><span class="meta">' +
+        '<svg viewBox="0 0 120 80" aria-hidden="true" focusable="false">' + DRAW[k.f] + '</svg><span aria-hidden="true">' + k.c + '</span></span></span></div>';
+    }).join('') + '</div><p class="tr" lang="tr">🎨 art club · 🎵 music club · 🎭 drama club</p>';
+  }
+  var NAMES = function (right) { return KIDS.map(function (k, i) { return { t: k.n, ok: k.n === right, k: i }; }); };
+  function kidCard(k) {
+    return '<span class="face" aria-hidden="true">' + k.a + '</span><span><b>' + k.n + '</b><span class="meta">' +
+      '<svg viewBox="0 0 120 80" aria-hidden="true" focusable="false">' + DRAW[k.f] + '</svg><span aria-hidden="true">' + k.c + '</span></span></span>';
+  }
+
+  var PARTS = [
+    {
+      h: 'Part 1: am, is or are', tr: 'Bölüm 1: am / is / are — Boşluğa uygun olanı seç.', task: 'Choose am, is or are.',
+      items: [
+        choice('I ___ eleven years old.', AIA('am')),
+        choice('My teacher ___ from Türkiye.', AIA('is')),
+        choice('Aiko and Valeria ___ in the art club.', AIA('are')),
+        choice('We ___ in Class 5A.', AIA('are')),
+        choice('Jack ___ not in the library.', AIA('is')),
+        choice('___ you from Spain?', [T('Am'), T('Is'), T('Are', true)])
+      ]
+    },
+    {
+      h: 'Part 2: Short forms', tr: 'Bölüm 2: Kısa hâller — Doğru kısa hâli seç.', task: 'Choose the short form.',
+      items: [
+        choice('She is', [T('She’s', true), T('She’m'), T('Shes')], { shuffle: true }),
+        choice('They are', [T('Theyr’e'), T('They’re', true), T('They’s')], { shuffle: true }),
+        choice('I am', [T('I’s'), T('Im’'), T('I’m', true)], { shuffle: true })
+      ]
+    },
+    {
+      h: 'Part 3: he or his? she or her?', tr: 'Bölüm 3: Boşluğa doğru kelimeyi seç.', task: 'Choose the correct word.',
+      items: [
+        choice('This is Marco. ___ club is music.', [T('He'), T('His', true), T('Her')]),
+        choice('Anya is from Russia. ___ favourite subject is Science.', [T('She'), T('His'), T('Her', true)]),
+        choice('We are in Class 5A. ___ teacher is Mr Kaya.', [T('We'), T('Our', true), T('Their')]),
+        choice('Edward and Louis are friends. ___ club is sports.', [T('They'), T('Our'), T('Their', true)]),
+        choice('Hi! ___ name is Ayşe.', [T('I'), T('My', true), T('Her')]),
+        choice('Diego is my friend. ___ is twelve years old.', [T('He', true), T('His'), T('Him')])
+      ]
+    },
+    {
+      h: 'Part 4: a or an?', tr: 'Bölüm 4: a mı, an mı? (a, e, i, o, u → an)', task: 'Choose a or an.',
+      items: [
+        choice('I have ___ umbrella.', [T('a'), T('an', true)], { vis: '☂️' }),
+        choice('This is ___ book.', [T('a', true), T('an')], { vis: '📘' }),
+        choice('There is ___ orange on the table.', [T('a'), T('an', true)], { vis: '🍊' }),
+        choice('I need ___ eraser.', [T('a'), T('an', true)], { vis: '🧽' }),
+        choice('She has ___ pencil.', [T('a', true), T('an')], { vis: '✏️' })
+      ]
+    },
+    {
+      h: 'Part 5: One → two', tr: 'Bölüm 5: Çoğul — Doğru çoğul hâli seç.', task: 'Choose the correct word.',
+      items: [
+        choice('one box → two ___', [T('boxs'), T('boxes', true), T('boxies')], { vis: '📦📦', shuffle: true }),
+        choice('one child → two ___', [T('childs'), T('childrens'), T('children', true)], { vis: '🧒🧒', shuffle: true }),
+        choice('one watch → two ___', [T('watches', true), T('watchs'), T('watchies')], { vis: '⌚⌚', shuffle: true }),
+        choice('one person → two ___', [T('peoples'), T('people', true), T('persones')], { vis: '🧑🧑', shuffle: true }),
+        choice('one baby → two ___', [T('babys'), T('babyes'), T('babies', true)], { vis: '👶👶', shuffle: true, tr: 'İpucu: y → ies' })
+      ]
+    },
+    {
+      h: 'Part 6: Read and choose', tr: 'Bölüm 6: Metni oku. Her boşlukta doğru kelimeye dokun.', task: 'Read Mert’s text. Tap the right word in each gap.',
+      inline: ['Hi! ', 0, ' name is Mert. I’m eleven. ', 1, ' best friend is Leyla. ', 2, ' is from Azerbaijan. Leyla and I ', 3,
+        ' in the drama club. ', 4, ' teacher is Mrs Brown. In my bag, there are two ', 5, ' and an apple.'],
+      items: [
+        choice('(1) ___ name is Mert.', [T('I'), T('My', true), T('Me')]),
+        choice('(2) ___ best friend is Leyla.', [T('My', true), T('I'), T('His')]),
+        choice('(3) ___ is from Azerbaijan.', [T('Her'), T('She', true), T('He')]),
+        choice('(4) Leyla and I ___ in the drama club.', [T('am'), T('is'), T('are', true)]),
+        choice('(5) ___ teacher is Mrs Brown.', [T('We'), T('Our', true), T('Us')]),
+        choice('(6) There are two ___ in my bag.', [T('book'), T('bookes'), T('books', true)])
+      ]
+    },
+    {
+      h: 'Part 7: Make the sentences', tr: 'Bölüm 7: Kelimelere doğru sırayla dokun. Çizgideki bir kelimeye dokunursan geri alırsın.', task: 'Tap the words in the right order.',
+      items: [
+        tiles(['Her', 'name', 'is', 'Leyla'], '.', 'Anlamı: “Onun adı Leyla.”'),
+        tiles(['They', 'are', 'in', 'the', 'art', 'club'], '.', 'Anlamı: “Onlar resim kulübündeler.”')
+      ]
+    },
+    {
+      h: 'Part 8: Choose the correct sentence', tr: 'Bölüm 8: Doğru cümleye dokun.', task: 'Tap the correct sentence.',
+      items: [
+        choice('Which sentence is correct?', [T('She name is Anya.'), T('Her name is Anya.', true), T('Her is Anya.')], { shuffle: true }),
+        choice('Which sentence is correct?', [T('There are two boxs.'), T('There is two boxes.'), T('There are two boxes.', true)], { shuffle: true }),
+        choice('Which sentence is correct?', [T('I have an apple.', true), T('I have a apple.'), T('I have an apples.')], { shuffle: true }),
+        choice('Which sentence is correct?', [T('They is from Spain.'), T('Their are from Spain.'), T('They are from Spain.', true)], { shuffle: true })
+      ]
+    },
+    {
+      h: 'Part 9: Detective', tr: 'Bölüm 9: Dedektif — Kartlara bak. İpuçlarını oku. Kim olduğunu bul.', task: 'Look at the cards. Read the clues. Who is it?',
+      intro: 'LEGEND',
+      items: [
+        choice('Who is it?', NAMES('Leyla'), { clues: ['Her club is drama.', 'She is from Azerbaijan.'] }),
+        choice('Who is it?', NAMES('Marco'), { clues: ['His club is music.', 'He is from Italy.'] }),
+        choice('Who is it?', NAMES('Aiko'), { clues: ['Her club is art.', 'She isn’t from Spain.'] })
+      ]
+    }
+  ];
+
+  /* ===== BONUS (optional, scored separately) ===== */
+  var HUNT = {
+    words: 'Hi! I am Can. I is eleven years old. My best friend is Ali. He name is Ali Demir. We are in the same class. Ali has two cat and a parrot. They is very funny. Every day, Ali eats a apple.'.split(' '),
+    wrong: { 5: 'am', 14: 'His', 28: 'cats', 33: 'are', 40: 'an' }
+  };
+  var BONUS = [
+    {
+      h: 'B1: Leyla’s club', tr: 'Bonus 1: ’s ile “-ın, -in” (Leyla’s = Leyla’nın). Doğru olanı seç.', task: 'Leyla’s club = the club of Leyla. Choose the right word.',
+      items: [
+        choice('Leyla is in the drama club. → ___ club is drama.', [T('Leylas'), T('Leyla’s', true), T('Leyla is')]),
+        choice('This is the bag of Marco. → This is ___ bag.', [T('Marco’s', true), T('Marcos'), T('Marco is')]),
+        choice('Mr Kaya is the teacher of Can. → Mr Kaya is ___ teacher.', [T('Can is'), T('Cans'), T('Can’s', true)]),
+        choice('___ from Russia.', [T('Anya’s'), T('Anya is', true), T('Anyas')], { tr: 'Dikkat! Burada “Anya Rusya’lı” diyoruz.' })
+      ]
+    },
+    {
+      h: 'B2: Logic detective', tr: 'Bonus 2: İpuçlarını oku. Kim nereli, kim hangi kulüpte? Sonra soruları cevapla.', task: 'Three friends: Jack, Elif and Sofia. Read the clues. Then answer.',
+      intro: '<div class="readbox"><p class="bh">Clubs: 🎨 art · 🎵 music · ♟️ chess &nbsp;|&nbsp; Countries: Türkiye · Spain · Canada</p><ul class="clues">' +
+        '<li>The boy isn’t in the music club or the art club.</li><li>Elif is from Türkiye.</li>' +
+        '<li>The girl from Spain isn’t in the music club.</li><li>Jack isn’t from Spain.</li></ul></div>',
+      items: [
+        choice('Who is in the art club?', [T('Jack'), T('Elif'), T('Sofia', true)]),
+        choice('Where is Jack from?', [T('Türkiye'), T('Spain'), T('Canada', true)]),
+        choice('What is Elif’s club?', [T('music', true), T('art'), T('chess')])
+      ]
+    },
+    {
+      h: 'B3: Error hunt', tr: 'Bonus 3: Bu metinde 5 hata var. Yanlış kelimelere dokun. (Yanlış dokunursan tekrar dokunup geri al.)', task: 'There are 5 mistakes in Can’s text. Tap the wrong words.',
+      hunt: true, items: []
+    }
+  ];
+  var bonusFlat = [];
+  var huntSel = {};
+
+  var partsEl = document.getElementById('parts');
+  var progressEl = document.getElementById('progress');
+  var warnEl = document.getElementById('warn');
+  var seeBtn = document.getElementById('see');
+  var resultsEl = document.getElementById('results');
+  var nameEl = document.getElementById('sname');
+  var sendMsg = document.getElementById('sendmsg');
+  var resendBtn = document.getElementById('resend');
+  var SEE_LABEL = 'Send my homework / Ödevimi gönder';
+
+  var flat = [];
+  var locked = false;
+  var warned = false;
+  var attempt = 0;
+  var payload = null;
+
+  function trLine(text) { var p = el('p', 'tr', text); p.setAttribute('lang', 'tr'); return p; }
+
+  function build() {
+    partsEl.innerHTML = '';
+    flat = [];
+    var n = 0;
+    PARTS.forEach(function (part) {
+      var sec = el('section', 'part');
+      sec.appendChild(el('h2', '', part.h));
+      sec.appendChild(el('p', 'task', part.task));
+      sec.appendChild(trLine(part.tr));
+      if (part.intro === 'LEGEND') { sec.appendChild(trLine('🎨 art club · 🎵 music club · 🎭 drama club')); }
+      else if (part.intro) { sec.insertAdjacentHTML('beforeend', part.intro); }
+      if (part.inline) {
+        var rb = el('div', 'readbox inline items');
+        part.inline.forEach(function (seg) {
+          if (typeof seg === 'string') { rb.appendChild(document.createTextNode(seg)); return; }
+          var item = part.items[seg];
+          n++;
+          item.n = n;
+          flat.push(item);
+          item.order = item.opts.map(function (o, i) { return i; });
+          item.sel = null;
+          item.btns = [];
+          var g = el('span', 'igap');
+          g.appendChild(el('span', 'ignum', String(n)));
+          item.order.forEach(function (oi) {
+            var o = item.opts[oi];
+            var b = el('button', 'oi', o.t);
+            b.type = 'button';
+            b.setAttribute('aria-pressed', 'false');
+            b.addEventListener('click', function () {
+              if (locked) { return; }
+              item.sel = oi;
+              item.btns.forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+              b.setAttribute('aria-pressed', 'true');
+              g.classList.add('done');
+              updateProgress();
+            });
+            item.btns.push(b);
+            g.appendChild(b);
+          });
+          rb.appendChild(g);
+        });
+        sec.appendChild(rb);
+        partsEl.appendChild(sec);
+        return;
+      }
+      var ol = el('ol', 'items');
+      part.items.forEach(function (item) {
+        n++;
+        item.n = n;
+        flat.push(item);
+        var li = document.createElement('li');
+        li.setAttribute('data-n', String(n));
+        if (item.type === 'choice') {
+          item.order = item.shuffle ? shuffle(item.opts.map(function (o, i) { return i; })) : item.opts.map(function (o, i) { return i; });
+          item.sel = null;
+          item.btns = [];
+          li.appendChild(el('p', 'prompt', item.prompt));
+          if (item.tr) { li.appendChild(trLine(item.tr)); }
+          if (item.vis) { var v = el('div', 'vis'); v.setAttribute('aria-hidden', 'true'); v.textContent = item.vis; li.appendChild(v); }
+          if (item.clues) {
+            var ul = el('ul', 'clues');
+            item.clues.forEach(function (c) { ul.appendChild(el('li', '', c)); });
+            li.appendChild(ul);
+          }
+          var box = el('div', item.opts[0].k !== undefined ? 'opts cast' : 'opts');
+          item.order.forEach(function (oi) {
+            var o = item.opts[oi];
+            var b = el('button', o.k !== undefined ? 'o kidcard' : 'o', o.k !== undefined ? undefined : o.t);
+            if (o.k !== undefined) { b.innerHTML = kidCard(KIDS[o.k]); b.setAttribute('aria-label', o.t); }
+            b.type = 'button';
+            b.setAttribute('aria-pressed', 'false');
+            b.addEventListener('click', function () {
+              if (locked) { return; }
+              item.sel = oi;
+              item.btns.forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+              b.setAttribute('aria-pressed', 'true');
+              updateProgress();
+            });
+            item.btns.push(b);
+            box.appendChild(b);
+          });
+          li.appendChild(box);
+        } else {
+          tilesState(item);
+          item.li = li;
+          renderTiles(item);
+        }
+        ol.appendChild(li);
+      });
+      sec.appendChild(ol);
+      partsEl.appendChild(sec);
+    });
+    progressEl.textContent = 'Answered 0 of ' + flat.length;
+    buildBonus(n);
+  }
+
+  function buildBonus(n0) {
+    bonusFlat = [];
+    huntSel = {};
+    var wrap = el('section', 'bonus');
+    wrap.appendChild(el('h2', '', '⭐ Bonus section (optional)'));
+    wrap.appendChild(el('p', 'task', 'Extra puzzles for curious minds. Try them if you want!'));
+    wrap.appendChild(trLine('Meraklılar için ekstra bulmacalar. İstersen dene!'));
+    var bn = 0;
+    BONUS.forEach(function (part) {
+      var sec = el('div', 'part');
+      sec.appendChild(el('h3', '', part.h));
+      sec.appendChild(el('p', 'task', part.task));
+      sec.appendChild(trLine(part.tr));
+      if (part.intro) { sec.insertAdjacentHTML('beforeend', part.intro); }
+      if (part.hunt) {
+        var hb = el('div', 'readbox hunt');
+        HUNT.words.forEach(function (w, i) {
+          var b = el('button', 'hw', w);
+          b.type = 'button';
+          b.setAttribute('aria-pressed', 'false');
+          b.addEventListener('click', function () {
+            if (locked) { return; }
+            huntSel[i] = !huntSel[i];
+            b.setAttribute('aria-pressed', huntSel[i] ? 'true' : 'false');
+          });
+          hb.appendChild(b);
+        });
+        sec.appendChild(hb);
+        wrap.appendChild(sec);
+        return;
+      }
+      var ol = el('ol', 'items');
+      part.items.forEach(function (item) {
+        bn++;
+        item.n = 'B' + bn;
+        bonusFlat.push(item);
+        var li = document.createElement('li');
+        li.setAttribute('data-n', item.n);
+        item.order = item.opts.map(function (o, i) { return i; });
+        item.sel = null;
+        item.btns = [];
+        li.appendChild(el('p', 'prompt', item.prompt));
+        if (item.tr) { li.appendChild(trLine(item.tr)); }
+        var box = el('div', 'opts');
+        item.order.forEach(function (oi) {
+          var o = item.opts[oi];
+          var b = el('button', 'o', o.t);
+          b.type = 'button';
+          b.setAttribute('aria-pressed', 'false');
+          b.addEventListener('click', function () {
+            if (locked) { return; }
+            item.sel = oi;
+            item.btns.forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+            b.setAttribute('aria-pressed', 'true');
+          });
+          item.btns.push(b);
+          box.appendChild(b);
+        });
+        li.appendChild(box);
+        ol.appendChild(li);
+      });
+      sec.appendChild(ol);
+      wrap.appendChild(sec);
+    });
+    partsEl.appendChild(wrap);
+  }
+
+  function tilesState(item) {
+    var arr, same;
+    do {
+      arr = shuffle(item.words.map(function (w, i) { return { id: i, text: w }; }));
+      same = arr.every(function (t, k) { return t.id === k; });
+    } while (same);
+    item.pool = arr;
+    item.placed = [];
+  }
+  function renderTiles(item) {
+    var li = item.li;
+    li.innerHTML = '';
+    if (item.tr) { li.appendChild(trLine(item.tr)); }
+    var line = el('div', 'line');
+    item.placed.forEach(function (tile) {
+      var b = el('button', 'tile', tile.text);
+      b.type = 'button';
+      b.disabled = locked;
+      b.addEventListener('click', function () {
+        if (locked) { return; }
+        item.placed = item.placed.filter(function (t) { return t !== tile; });
+        item.pool.push(tile);
+        renderTiles(item);
+        updateProgress();
+      });
+      line.appendChild(b);
+    });
+    line.appendChild(el('span', 'end', item.end));
+    var pool = el('div', 'pool');
+    item.pool.forEach(function (tile) {
+      var b = el('button', 'tile', tile.text);
+      b.type = 'button';
+      b.disabled = locked;
+      b.addEventListener('click', function () {
+        if (locked) { return; }
+        item.pool = item.pool.filter(function (t) { return t !== tile; });
+        item.placed.push(tile);
+        renderTiles(item);
+        updateProgress();
+      });
+      pool.appendChild(b);
+    });
+    li.appendChild(line);
+    li.appendChild(pool);
+  }
+
+  function isAnswered(it) { return it.type === 'choice' ? it.sel !== null : it.placed.length === it.words.length; }
+  function updateProgress() {
+    var done = flat.filter(isAnswered).length;
+    progressEl.textContent = 'Answered ' + done + ' of ' + flat.length;
+    if (done === flat.length && warned) { warned = false; warnEl.textContent = ''; seeBtn.textContent = SEE_LABEL; }
+  }
+
+  function row(label, text) {
+    var r = el('div', 'row');
+    r.appendChild(el('span', 'lab', label));
+    r.appendChild(el('span', '', text));
+    return r;
+  }
+  function verdictNode(state) {
+    return el('p', 'verdict ' + (state === 'ok' ? 'ok' : 'bad'), state === 'ok' ? '✓ Doğru' : (state === 'bad' ? '✗ Yanlış' : '– Cevapsız'));
+  }
+
+  function send() {
+    if (!SHEET_URL || SHEET_URL.indexOf('https://script.google.com/') !== 0) {
+      sendMsg.className = 'sendmsg bad';
+      sendMsg.textContent = 'Bu sayfa henüz öğretmenin tablosuna bağlı değil. Öğretmenine haber ver.';
+      return;
+    }
+    sendMsg.className = 'sendmsg';
+    sendMsg.textContent = 'Gönderiliyor…';
+    resendBtn.hidden = true;
+    fetch(SHEET_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).then(function () {
+      sendMsg.className = 'sendmsg ok';
+      sendMsg.textContent = '✓ Ödevin öğretmenine gönderildi. Teşekkürler!';
+    }, function () {
+      sendMsg.className = 'sendmsg bad';
+      sendMsg.textContent = 'Gönderilemedi. İnternet bağlantını kontrol et ve tekrar dene.';
+      resendBtn.hidden = false;
+    });
+  }
+
+  function showResults() {
+    locked = true;
+    attempt++;
+    document.querySelectorAll('.items button').forEach(function (b) { b.disabled = true; });
+    nameEl.disabled = true;
+    var correct = 0;
+    var wrong = [];
+    var lines = [];
+    var out = document.getElementById('res-parts');
+    out.innerHTML = '';
+    PARTS.forEach(function (part) {
+      var box = el('div', 'rpart');
+      box.appendChild(el('h3', '', part.h));
+      part.items.forEach(function (item) {
+        var d = el('div', 'ritem');
+        var state, mine, right, q;
+        if (item.type === 'choice') {
+          var r = item.opts.filter(function (o) { return o.ok; })[0];
+          right = r.t;
+          mine = item.sel === null ? null : item.opts[item.sel].t;
+          state = item.sel === null ? 'none' : (item.opts[item.sel].ok ? 'ok' : 'bad');
+          q = item.prompt + (item.clues ? ' (' + item.clues.join(' ') + ')' : '');
+        } else {
+          var full = item.placed.length === item.words.length;
+          right = item.words.join(' ') + item.end;
+          mine = item.placed.length ? item.placed.map(function (t) { return t.text; }).join(' ') + item.end : null;
+          state = full && item.placed.every(function (t, k) { return t.id === k; }) ? 'ok' : (full ? 'bad' : 'none');
+          q = right;
+        }
+        if (state === 'ok') { correct++; } else { wrong.push(item.n + ' (' + (mine || '—') + ' → ' + right + ')'); }
+        d.appendChild(el('p', 'rq', item.n + '. ' + q));
+        d.appendChild(verdictNode(state));
+        d.appendChild(row('Senin cevabın:', mine || '—'));
+        if (state !== 'ok') { d.appendChild(row('Doğru cevap:', right)); }
+        lines.push(item.n + '. ' + q + ' | ' + (state === 'ok' ? 'correct' : (state === 'none' ? 'no answer' : 'wrong: ' + mine)));
+        box.appendChild(d);
+      });
+      out.appendChild(box);
+    });
+    /* bonus */
+    var bonus = 0, bonusTotal = 0, bonusTried = false;
+    var bbox = el('div', 'rpart bonus');
+    bbox.appendChild(el('h3', '', '⭐ Bonus'));
+    bonusFlat.forEach(function (item) {
+      bonusTotal++;
+      var r = item.opts.filter(function (o) { return o.ok; })[0].t;
+      var mine = item.sel === null ? null : item.opts[item.sel].t;
+      if (mine !== null) { bonusTried = true; }
+      var st = mine === null ? 'none' : (item.opts[item.sel].ok ? 'ok' : 'bad');
+      if (st === 'ok') { bonus++; }
+      var d = el('div', 'ritem');
+      d.appendChild(el('p', 'rq', item.n + '. ' + item.prompt));
+      d.appendChild(verdictNode(st));
+      d.appendChild(row('Senin cevabın:', mine || '—'));
+      if (st !== 'ok') { d.appendChild(row('Doğru cevap:', r)); }
+      lines.push(item.n + '. ' + item.prompt + ' | ' + (st === 'ok' ? 'correct' : (st === 'none' ? 'no answer' : 'wrong: ' + mine)));
+      bbox.appendChild(d);
+    });
+    var found = 0, extra = 0;
+    Object.keys(huntSel).forEach(function (k) { if (huntSel[k]) { bonusTried = true; if (HUNT.wrong[k]) { found++; } else { extra++; } } });
+    var huntScore = Math.max(0, found - extra);
+    bonus += huntScore;
+    bonusTotal += 5;
+    var hd = el('div', 'ritem');
+    hd.appendChild(el('p', 'rq', 'Error hunt: ' + found + ' / 5 hata buldun' + (extra ? ', ' + extra + ' doğru kelimeyi yanlış sandın' : '') + '.'));
+    Object.keys(HUNT.wrong).forEach(function (k) {
+      hd.appendChild(row((huntSel[k] ? '✓ ' : '✗ ') + HUNT.words[k] + ' →', HUNT.wrong[k]));
+    });
+    bbox.appendChild(hd);
+    lines.push('Error hunt: found ' + found + '/5, wrong taps ' + extra);
+    var bq = bonusFlat.length;
+    var bc = bonus - huntScore;
+    bbox.insertBefore(el('p', 'score', bonusTried ? 'Bonusta ' + bq + ' sorudan ' + bc + ' tanesini doğru yaptın ve 5 hatanın ' + found + ' tanesini buldun.' : 'Bonusu denemedin. Sorun değil!'), bbox.children[1]);
+    out.appendChild(bbox);
+
+    var total = flat.length;
+    document.getElementById('score').textContent = total + ' sorudan ' + correct + ' tanesini doğru yaptın.';
+    document.getElementById('praise').textContent = correct === total ? 'Harikasın! Hepsi doğru.' : (correct >= Math.round(total * 0.8) ? 'Çok iyi! Yanlış yaptıklarına bir daha bak.' : 'Güzel deneme! Yanlışlara bakıp tekrar dene.');
+    payload = {
+      homework: HOMEWORK_ID,
+      name: nameEl.value.trim(),
+      score: correct,
+      total: total,
+      attempt: attempt,
+      wrong: wrong.join('; '),
+      bonus: bonusTried ? bonus : '',
+      bonusTotal: bonusTotal,
+      details: lines.join('\n')
+    };
+    resultsEl.hidden = false;
+    seeBtn.hidden = true;
+    warnEl.textContent = '';
+    resultsEl.focus();
+    resultsEl.scrollIntoView();
+    send();
+  }
+
+  seeBtn.addEventListener('click', function () {
+    if (!nameEl.value.trim()) {
+      nameEl.parentNode.classList.add('missing');
+      warnEl.textContent = 'Önce en üstte adını ve soyadını yaz.';
+      nameEl.focus();
+      nameEl.scrollIntoView({ block: 'center' });
+      return;
+    }
+    var missing = flat.filter(function (it) { return !isAnswered(it); }).map(function (it) { return it.n; });
+    if (missing.length && !warned) {
+      warned = true;
+      warnEl.textContent = 'Henüz cevaplamadığın sorular var: ' + missing.join(', ') + '. Cevapla ya da yine de gönder.';
+      seeBtn.textContent = 'Yine de gönder';
+      return;
+    }
+    showResults();
+  });
+  nameEl.addEventListener('input', function () {
+    if (nameEl.value.trim()) { nameEl.parentNode.classList.remove('missing'); if (warnEl.textContent.indexOf('adını') >= 0) { warnEl.textContent = ''; } }
+  });
+  resendBtn.addEventListener('click', send);
+
+  document.getElementById('restart').addEventListener('click', function () {
+    locked = false;
+    warned = false;
+    warnEl.textContent = '';
+    seeBtn.textContent = SEE_LABEL;
+    seeBtn.hidden = false;
+    nameEl.disabled = false;
+    resultsEl.hidden = true;
+    sendMsg.textContent = '';
+    resendBtn.hidden = true;
+    build();
+    window.scrollTo(0, 0);
+  });
+
+  build();
+})();
+</script>
+</body>
+</html>
